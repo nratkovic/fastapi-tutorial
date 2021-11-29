@@ -6,16 +6,15 @@ services:
       - postgres
     ports:
       - 8008:8000
-    env_file:
-      - ./.env
+    environment:
+      - DATABASE_HOSTNAME=postgres
+      - DATABASE_NAME=fastapi
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=password123
+      - DATABASE_PORT=5432
+
   postgres:
     image: postgres
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password123
-      - POSTGRES_DB=fastapi
     volumes:
       - postgres-db:/var/lib/postgresql/data
 
