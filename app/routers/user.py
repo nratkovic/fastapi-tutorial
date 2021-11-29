@@ -64,6 +64,10 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 @router.put("/{user_id}", response_model=schemas.UserOut)
 def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
 
+    # hash a user password - user.password
+    hashed_password = utils.hash_password(user.password)
+    user.password = hashed_password
+
     user_query = db.query(models.User).filter(models.User.id == user_id)
 
     if not user_query.first():
