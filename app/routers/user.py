@@ -31,8 +31,14 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
+    invalid_password_exception = HTTPException(
+        status_code=400,
+        detail="Invalid password! Make sure it is at lest 8 letters, "
+               "has at least one capital letter, number and special character",
+    )
+
     # hash a user password - user.password
-    hashed_password = utils.hash_password(user.password)
+    hashed_password = utils.hash_password(utils.validate_password(user.password, invalid_password_exception))
     user.password = hashed_password
 
     user_db = db.query(models.User).filter(models.User.email == user.email).first()

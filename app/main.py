@@ -1,8 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from . import models
-from .database import engine
-from .config import settings
 from .routers import post, user, auth, vote
 
 # statement to create all tables not needed if using Alembic
@@ -29,6 +26,3 @@ app.include_router(vote.router)
 @app.get("/")
 def root():
     return {"message": "Welcome to FastAPI project!!!"}
-
-
-
