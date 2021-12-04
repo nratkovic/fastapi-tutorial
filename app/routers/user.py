@@ -1,13 +1,18 @@
-from fastapi import status, HTTPException, Response, Depends, APIRouter
 from typing import List
-from sqlalchemy.orm import Session
-from .. import models, schemas, utils
-from ..database import get_db
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"],
-)
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from sqlalchemy.orm import Session
+
+from .. import models
+from .. import schemas
+from ..database import get_db
+from ..utils import email_sender
+from ..utils import password_verifier
+
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", response_model=List[schemas.UserOut])
@@ -23,8 +28,10 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     user_db = db.query(models.User).filter(models.User.id == user_id).first()
 
     if not user_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with id {user_id} was not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} was not found",
+        )
     return user_db
 
 
@@ -34,22 +41,32 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     invalid_password_exception = HTTPException(
         status_code=400,
         detail="Invalid password! Make sure it is at lest 8 letters, "
-               "has at least one capital letter, number and special character",
+        "has at least one capital letter, number and special character",
+    )
+
+    # validate password
+    valid_password = password_verifier.validate_password(
+        user.password, invalid_password_exception
     )
 
     # hash a user password - user.password
-    hashed_password = utils.hash_password(utils.validate_password(user.password, invalid_password_exception))
+    hashed_password = password_verifier.hash_password(valid_password)
     user.password = hashed_password
 
     user_db = db.query(models.User).filter(models.User.email == user.email).first()
     new_user = models.User(**user.dict())
 
     if user_db:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail=f"User with email {user.email} already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with email {user.email} already exists",
+        )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    email_sender.send_confirmation_email(new_user.email)
+
     return new_user
 
 
@@ -59,32 +76,37 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     user_query = db.query(models.User).filter(models.User.id == user_id)
 
     if not user_query.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with id {user_id} was not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} was not found",
+        )
 
     user_query.delete(synchronize_session=False)
     db.commit()
-    return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.put("/{user_id}", response_model=schemas.UserOut)
 def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # hash a user password - user.password
-    hashed_password = utils.hash_password(user.password)
+    hashed_password = password_verifier.hash_password(user.password)
     user.password = hashed_password
 
     user_query = db.query(models.User).filter(models.User.id == user_id)
 
     if not user_query.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with id {user_id} was not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} was not found",
+        )
 
     email_query = db.query(models.User).filter(models.User.email == user.email)
 
     if email_query.first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail=f"User with email {user.email} already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with email {user.email} already exists",
+        )
 
     user_query.update(user.dict(), synchronize_session=False)
     db.commit()

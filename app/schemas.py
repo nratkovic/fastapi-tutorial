@@ -1,6 +1,9 @@
-from pydantic import BaseModel, EmailStr, conint
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import conint
+from pydantic import EmailStr
 
 
 class UserBase(BaseModel):
@@ -59,3 +62,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[str] = None
+
+
+class EmailSchema(BaseModel):
+    email: EmailStr

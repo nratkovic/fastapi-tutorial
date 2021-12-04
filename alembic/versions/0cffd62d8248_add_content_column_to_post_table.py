@@ -5,13 +5,14 @@ Revises: ceb4e55b6c78
 Create Date: 2021-11-20 16:18:28.847856
 
 """
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = '0cffd62d8248'
-down_revision = 'ceb4e55b6c78'
+revision = "0cffd62d8248"
+down_revision = "ceb4e55b6c78"
 branch_labels = None
 depends_on = None
 

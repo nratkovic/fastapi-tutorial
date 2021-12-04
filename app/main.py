@@ -1,11 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import post, user, auth, vote
+
+from .config import settings
+from .routers import auth
+from .routers import post
+from .routers import user
+from .routers import vote
 
 # statement to create all tables not needed if using Alembic
 # models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title=settings.project_name, version=settings.project_version)
 
 origins = ["*"]
 

@@ -1,6 +1,6 @@
-from passlib.context import CryptContext
-from fastapi import HTTPException
 import re
+
+from passlib.context import CryptContext
 
 # set default hashing algorithm to bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -16,7 +16,7 @@ def verify_password(plain_password: str, hashed_password: str):
 
 def validate_password(password: str, invalid_password_exception):
 
-    if not re.fullmatch(r'[A-Za-z0-9@#$%^&+=]{8,}', password):
+    if not re.fullmatch(r"[A-Za-z0-9@#$%^&+=]{8,}", password):
         raise invalid_password_exception
 
     return password
