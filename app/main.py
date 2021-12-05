@@ -6,6 +6,8 @@ from .routers import auth
 from .routers import post
 from .routers import user
 from .routers import vote
+from .utils.db import check_db_connected
+from .utils.db import check_db_disconnected
 
 # statement to create all tables not needed if using Alembic
 # models.Base.metadata.create_all(bind=engine)
@@ -31,3 +33,13 @@ app.include_router(vote.router)
 @app.get("/")
 def root():
     return {"message": "Welcome to FastAPI project!!!"}
+
+
+@app.on_event("startup")
+async def app_startup():
+    await check_db_connected()
+
+
+@app.on_event("shutdown")
+async def app_shutdown():
+    await check_db_disconnected()
