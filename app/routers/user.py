@@ -88,8 +88,19 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 @router.put("/{user_id}", response_model=schemas.UserOut)
 def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
 
+    invalid_password_exception = HTTPException(
+        status_code=400,
+        detail="Invalid password! Make sure it is at lest 8 letters, "
+        "has at least one capital letter, number and special character",
+    )
+
+    # validate password
+    valid_password = password_verifier.validate_password(
+        user.password, invalid_password_exception
+    )
+
     # hash a user password - user.password
-    hashed_password = password_verifier.hash_password(user.password)
+    hashed_password = password_verifier.hash_password(valid_password)
     user.password = hashed_password
 
     user_query = db.query(models.User).filter(models.User.id == user_id)
